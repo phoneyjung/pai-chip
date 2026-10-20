@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b2b21">
+<title>ชิปวงไพ่</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='22' fill='%23cf4a3f'/%3E%3Ccircle cx='24' cy='24' r='19.5' fill='none' stroke='%23f5eedb' stroke-width='5' stroke-dasharray='5.1 5.1'/%3E%3Ccircle cx='24' cy='24' r='13' fill='%23f5eedb'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>
+:root{
+  --felt:#0f3b2e; --felt-hi:#1a5a43; --felt-lo:#0a2820; --line:rgba(245,238,219,.13); --glass:rgba(245,238,219,.05);
+  --cream:#f5eedb; --cream-2:#e9dfc5; --paper:#fffaf0; --ink:#13281f; --ink-2:#56695f;
+  --gold:#e6b450; --gold-d:#b98a2b; --red:#cf4a3f; --up:#2f9e66; --up-l:#5fd39a; --down:#cf4a3f; --down-l:#ff8a7f;
+  --s1:8px; --s2:13px; --s3:21px; --s4:34px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{background:var(--felt-lo);color:var(--cream);font:16px/1.5 'Sarabun',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+body::before{content:'';position:fixed;inset:0;z-index:-1;background:
+  radial-gradient(130% 75% at 50% -12%,var(--felt-hi) 0%,var(--felt) 46%,var(--felt-lo) 100%)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+h1,h2,h3{font-family:'Kanit',sans-serif;font-weight:600;margin:0;line-height:1.25}
+.num{font-family:'Kanit',sans-serif;font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+#app{max-width:520px;margin:0 auto;min-height:100dvh;padding:calc(var(--s2) + env(safe-area-inset-top)) 16px calc(var(--s4) + env(safe-area-inset-bottom))}
+.scr{display:none}.scr.on{display:block;animation:fade .28s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- brand / common ---------- */
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:34px;height:34px;flex:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.35))}
+.brand h1{font-size:22px}
+.brand small{display:block;font:500 12px/1.2 'Sarabun';color:rgba(245,238,219,.6)}
+.hero{text-align:center;padding:var(--s4) 0 var(--s3)}
+.hero svg{width:89px;height:89px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45));animation:spin 14s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hero h1{font-size:30px;margin-top:var(--s2)}
+.hero p{margin:6px 0 0;color:rgba(245,238,219,.7)}
+.card{background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:var(--s3);margin-top:var(--s2)}
+.card h2{font-size:18px;margin-bottom:var(--s2);display:flex;align-items:center;gap:8px}
+.muted{color:rgba(245,238,219,.62);font-size:14px}
+.field{display:block;margin-bottom:var(--s2)}
+.field>span{display:block;font-size:13px;font-weight:600;color:rgba(245,238,219,.75);margin-bottom:5px}
+.inp{width:100%;height:50px;border-radius:13px;border:2px solid transparent;background:var(--cream);color:var(--ink);padding:0 14px;font-size:16px;outline:none;transition:border-color .15s}
+.inp:focus{border-color:var(--gold)}
+textarea.inp{height:auto;min-height:78px;padding:12px 14px;resize:vertical;font-size:14px;word-break:break-all}
+.row{display:flex;gap:var(--s1);align-items:center}
+.row>.grow{flex:1;min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;padding:0 20px;border-radius:14px;font:600 16px 'Kanit';transition:transform .08s,filter .15s,opacity .15s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45;pointer-events:none}
+.btn.block{width:100%}
+.btn.gold{background:linear-gradient(180deg,#f0c76a,var(--gold));color:#2a1d05;box-shadow:0 4px 0 var(--gold-d),0 8px 18px rgba(0,0,0,.3)}
+.btn.gold:active{box-shadow:0 1px 0 var(--gold-d)}
+.btn.cream{background:var(--cream);color:var(--ink)}
+.btn.ghost{background:transparent;color:var(--cream);border:1.5px solid rgba(245,238,219,.35)}
+.btn.inkghost{background:transparent;color:var(--ink);border:1.5px solid rgba(19,40,31,.22)}
+.btn.danger{background:transparent;color:var(--red);border:1.5px solid rgba(207,74,63,.4)}
+.btn.sm{height:40px;padding:0 14px;font-size:14px;border-radius:11px}
+.or{display:flex;align-items:center;gap:12px;color:rgba(245,238,219,.5);font-size:13px;margin:var(--s3) 0}
+.or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0}
+.toggle input{appearance:none;width:50px;height:30px;border-radius:30px;background:rgba(245,238,219,.25);position:relative;flex:none;transition:background .2s;cursor:pointer}
+.toggle input::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.toggle input:checked{background:var(--gold)}
+.toggle input:checked::after{transform:translateX(20px)}
+.toggle small{display:block;color:rgba(245,238,219,.55);font-size:12.5px}
+.help{margin-top:var(--s2)}
+.help summary{cursor:pointer;color:var(--gold);font-weight:600;list-style:none}
+.help summary::-webkit-details-marker{display:none}
+.help ol{padding-left:20px;margin:10px 0 0}
+.help li{margin-bottom:8px}
+.help code,.code{background:rgba(0,0,0,.3);border-radius:8px;padding:2px 6px;font-size:12.5px;word-break:break-all}
+.help pre{background:rgba(0,0,0,.35);border-radius:12px;padding:12px;font-size:12.5px;overflow:auto;margin:6px 0 0}
+.recent{display:flex;flex-wrap:wrap;gap:8px;margin-top:var(--s2)}
+.recent button{padding:8px 13px;border-radius:30px;background:rgba(245,238,219,.08);border:1px solid var(--line);font-size:14px}
+.recent b{font-family:'Kanit';color:var(--gold);margin-left:4px}
+
+/* ---------- boot ---------- */
+.boot{min-height:70dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--s3);color:rgba(245,238,219,.75)}
+.boot svg{width:64px;height:64px;animation:spin 1.6s linear infinite}
+
+/* ---------- main ---------- */
+.top{display:flex;align-items:center;gap:10px;margin-bottom:var(--s2)}
+.top .brand{flex:1;min-width:0}
+.top .brand h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:20px}
+.codepill{font:600 13px 'Kanit';letter-spacing:.12em;padding:6px 10px;border-radius:30px;background:rgba(0,0,0,.25);border:1px solid var(--line);display:flex;align-items:center;gap:7px}
+.dot{width:8px;height:8px;border-radius:50%;background:#e0a33a;box-shadow:0 0 0 3px rgba(224,163,58,.2)}
+body.online .dot{background:var(--up-l);box-shadow:0 0 0 3px rgba(95,211,154,.2)}
+.iconbtn{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:rgba(0,0,0,.2);border:1px solid var(--line)}
+.iconbtn svg{width:22px;height:22px}
+.admbar{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,rgba(230,180,80,.22),rgba(230,180,80,.08));border:1px solid rgba(230,180,80,.45);color:#ffe2a3;border-radius:14px;padding:9px 12px;font-size:14px;margin-bottom:var(--s2)}
+.admbar b{font-family:'Kanit';font-weight:600}
+.admbar .grow{flex:1}
+
+.bal{position:relative;overflow:hidden;background:var(--paper);color:var(--ink);border-radius:24px;padding:var(--s3) var(--s3) 18px;box-shadow:0 14px 34px rgba(0,0,0,.38),inset 0 0 0 1px rgba(0,0,0,.05)}
+.bal::before{content:'';position:absolute;inset:8px;border-radius:18px;border:1.5px solid rgba(207,74,63,.18);pointer-events:none}
+.pip{position:absolute;font:600 15px/1 'Kanit';color:var(--red);text-align:center;opacity:.85}
+.pip i{display:block;font-style:normal;font-size:17px}
+.pip.tl{top:16px;left:18px}.pip.br{bottom:16px;right:18px;transform:rotate(180deg)}
+.bal .who{display:flex;align-items:center;justify-content:center;gap:8px;font:600 16px 'Kanit'}
+.bal .lbl{text-align:center;font-size:13px;color:var(--ink-2);margin-top:2px}
+.bal .amt{display:flex;align-items:center;justify-content:center;gap:12px;font:700 clamp(54px,17vw,76px)/1 'Kanit';letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin:10px 0 8px;transition:color .3s}
+.bal .amt svg{width:.62em;height:.62em;flex:none}
+.bal .amt.neg{color:var(--down)}
+.bal .amt.bump{animation:bump .5s ease}
+.bal .amt.gain{color:var(--up)}
+.bal .amt.loss{color:var(--down)}
+@keyframes bump{30%{transform:scale(1.08)}}
+.bal .net{text-align:center;font-size:14px;color:var(--ink-2)}
+.net .up{color:var(--up);font-weight:700}.net .down{color:var(--down);font-weight:700}
+
+.acts{display:grid;grid-template-columns:1.618fr 1fr;gap:var(--s2);margin:var(--s3) 0}
+.acts .btn{height:64px;font-size:18px;border-radius:18px}
+.acts svg{width:24px;height:24px}
+
+.tabs{display:flex;background:rgba(0,0,0,.25);border-radius:14px;padding:4px;margin-bottom:var(--s2)}
+.tabs button{flex:1;height:40px;border-radius:11px;font:600 15px 'Kanit';color:rgba(245,238,219,.65)}
+.tabs button.on{background:rgba(245,238,219,.14);color:var(--cream)}
+.list{display:flex;flex-direction:column;gap:8px}
+.prow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;width:100%;text-align:left;background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:11px 14px;transition:background .15s}
+.prow:active{background:rgba(245,238,219,.1)}
+.prow.me{border-color:rgba(230,180,80,.55);background:rgba(230,180,80,.08)}
+.ava{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:rgba(245,238,219,.1);flex:none}
+.ava.big{width:56px;height:56px;font-size:30px;background:rgba(19,40,31,.08)}
+.pname{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pname em{font-style:normal;font-size:11px;font-weight:700;background:var(--gold);color:#2a1d05;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.pname small{display:block;font-weight:400;font-size:12px;color:rgba(245,238,219,.5)}
+.pnum{text-align:right;line-height:1.2}
+.pnum b{font:600 20px 'Kanit';font-variant-numeric:tabular-nums;display:block}
+.pnum small{font-size:12px;font-weight:700}
+.pnum .up{color:var(--up-l)}.pnum .down{color:var(--down-l)}.pnum .even{color:rgba(245,238,219,.45)}
+.rank{font:600 12px 'Kanit';color:rgba(245,238,219,.4);width:14px;text-align:center}
+.foot{text-align:center;color:rgba(245,238,219,.5);font-size:13px;margin-top:var(--s2)}
+.lrow{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:11px 4px;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.lrow .t{font:500 12px 'Kanit';color:rgba(245,238,219,.45)}
+.lrow .d{font-size:14.5px;min-width:0}
+.lrow .a{font:600 17px 'Kanit';font-variant-numeric:tabular-nums}
+.lrow .a.in{color:var(--up-l)}.lrow .a.out{color:var(--down-l)}
+.lrow.x .d,.lrow.x .a{text-decoration:line-through;opacity:.45}
+.lrow .tag{font-size:11px;padding:1px 6px;border-radius:6px;background:rgba(245,238,219,.12);margin-left:4px}
+.empty{text-align:center;color:rgba(245,238,219,.45);padding:var(--s4) 0;font-size:14px}
+.admtools{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:var(--s2)}
+.admtools .btn{height:46px;font-size:14px;padding:0 8px;border-radius:12px;background:rgba(230,180,80,.14);color:#ffe2a3;border:1px solid rgba(230,180,80,.35)}
+
+/* ---------- pick ---------- */
+.pickhead{text-align:center;margin:var(--s3) 0}
+.pickhead h1{font-size:24px}
+.pickhead .codepill{display:inline-flex;margin-top:8px}
+
+/* ---------- sheet ---------- */
+.sheet-wrap{position:fixed;inset:0;z-index:50}
+.backdrop{position:absolute;inset:0;background:rgba(3,12,9,.6);opacity:0;transition:opacity .22s;backdrop-filter:blur(2px)}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;max-height:92dvh;overflow:auto;background:var(--cream);color:var(--ink);border-radius:26px 26px 0 0;padding:10px 18px calc(var(--s3) + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .26s cubic-bezier(.2,.8,.2,1);box-shadow:0 -10px 40px rgba(0,0,0,.4)}
+.sheet::before{content:'';display:block;width:42px;height:5px;border-radius:5px;background:rgba(19,40,31,.18);margin:0 auto 10px}
+.sheet-wrap.open .backdrop{opacity:1}
+.sheet-wrap.open .sheet{transform:none}
+.sh-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s2)}
+.sh-head h3{font-size:20px}
+.x{width:38px;height:38px;border-radius:12px;background:rgba(19,40,31,.07);font-size:18px;color:var(--ink)}
+.sheet .inp{background:#fff;border-color:rgba(19,40,31,.12)}
+.sheet .inp:focus{border-color:var(--gold-d)}
+.sheet .field>span{color:var(--ink-2)}
+.sheet .muted{color:var(--ink-2)}
+.sheet .toggle input{background:rgba(19,40,31,.18)}
+.sheet .toggle input:checked{background:var(--gold-d)}
+.sheet .toggle small{color:var(--ink-2)}
+.payto{display:flex;align-items:center;gap:12px;background:#fff;border-radius:16px;padding:12px 14px}
+.payto small{display:block;color:var(--ink-2);font-size:13px}
+.payto b{font:600 20px 'Kanit'}
+.req{margin-top:10px;background:rgba(230,180,80,.2);color:#6b4b0c;border-radius:12px;padding:8px 12px;font-size:14px;font-weight:600;text-align:center}
+.amtbig{text-align:center;font:700 58px/1 'Kanit';font-variant-numeric:tabular-nums;margin:var(--s3) 0 6px;letter-spacing:-.02em}
+.amtbig.zero{color:rgba(19,40,31,.25)}
+.after{text-align:center;font-size:14px;color:var(--ink-2);min-height:22px}
+.after.bad{color:var(--down);font-weight:700}
+.chips{display:flex;justify-content:space-between;gap:6px;margin:var(--s2) 0}
+.chip{--c:#cf4a3f;width:56px;height:56px;border-radius:50%;flex:none;position:relative;display:grid;place-items:center;font:700 15px 'Kanit';color:var(--ink);background:var(--c);box-shadow:0 3px 0 rgba(0,0,0,.25),0 6px 12px rgba(0,0,0,.15)}
+.chip::before{content:'';position:absolute;inset:4px;border-radius:50%;border:4px dashed rgba(255,255,255,.85)}
+.chip::after{content:'';position:absolute;inset:12px;border-radius:50%;background:#fffaf0}
+.chip span{position:relative;z-index:1}
+.chip:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.chip.c5{--c:#cf4a3f}.chip.c10{--c:#2f6fb5}.chip.c20{--c:#2f9e66}.chip.c50{--c:#2b2b2b}.chip.c100{--c:#c9952f}
+.chip.minus{--c:#7b8a83}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:var(--s2)}
+.pad button{height:54px;border-radius:14px;background:#fff;font:500 24px 'Kanit';color:var(--ink);box-shadow:0 2px 0 rgba(19,40,31,.08)}
+.pad button:active{background:var(--cream-2)}
+.pad button.fn{font-size:18px;color:var(--ink-2);background:rgba(255,255,255,.55)}
+.qrbox{background:#fff;border-radius:22px;padding:14px;width:min(78vw,300px);margin:0 auto;box-shadow:0 6px 20px rgba(19,40,31,.12)}
+.qrbox svg{display:block;width:100%;height:auto}
+.qrname{text-align:center;font:600 22px 'Kanit';margin-top:var(--s2)}
+.qrsub{text-align:center;color:var(--ink-2);font-size:14px;margin:2px 0 var(--s2)}
+.qrreq{display:inline-block;background:var(--ink);color:var(--gold);border-radius:10px;padding:2px 10px;font:600 15px 'Kanit';margin-left:6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.seg button{height:38px;min-width:52px;padding:0 12px;border-radius:30px;background:#fff;font:600 14px 'Kanit';border:1.5px solid rgba(19,40,31,.1)}
+.seg button.on{background:var(--ink);color:var(--gold);border-color:var(--ink)}
+.menu{display:flex;flex-direction:column}
+.menu button{display:flex;align-items:center;gap:14px;padding:14px 6px;border-bottom:1px solid rgba(19,40,31,.08);font-size:16px;text-align:left;color:var(--ink)}
+.menu button:last-child{border-bottom:0}
+.menu .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:rgba(19,40,31,.06);font-size:19px;flex:none}
+.menu small{display:block;color:var(--ink-2);font-size:12.5px}
+.menu .red{color:var(--red)}
+.big-code{text-align:center;font:700 40px/1 'Kanit';letter-spacing:.18em;margin:var(--s2) 0 4px}
+.delta{text-align:center;font:700 46px/1 'Kanit';font-variant-numeric:tabular-nums;margin:var(--s2) 0 4px}
+.delta.up{color:var(--up)}.delta.down{color:var(--down)}.delta.zero{color:rgba(19,40,31,.25)}
+.sheet .plist .prow{background:#fff;border-color:rgba(19,40,31,.08);color:var(--ink)}
+.sheet .plist .pname small{color:var(--ink-2)}
+.sheet .plist .pnum .even{color:var(--ink-2)}
+.sheet .plist .pnum .up{color:var(--up)}.sheet .plist .pnum .down{color:var(--down)}
+.sheet .plist .ava{background:rgba(19,40,31,.06)}
+.hr{height:1px;background:rgba(19,40,31,.1);margin:var(--s3) 0}
+
+/* ---------- scanner ---------- */
+.scan{position:fixed;inset:0;z-index:60;background:#000;color:#fff}
+.scan video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.scan-frame{position:absolute;left:50%;top:44%;width:min(70vw,300px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:24px;box-shadow:0 0 0 100vmax rgba(0,0,0,.5)}
+.scan-frame i{position:absolute;width:38px;height:38px;border:4px solid var(--gold)}
+.scan-frame i:nth-child(1){top:-2px;left:-2px;border-right:0;border-bottom:0;border-radius:22px 0 0 0}
+.scan-frame i:nth-child(2){top:-2px;right:-2px;border-left:0;border-bottom:0;border-radius:0 22px 0 0}
+.scan-frame i:nth-child(3){bottom:-2px;left:-2px;border-right:0;border-top:0;border-radius:0 0 0 22px}
+.scan-frame i:nth-child(4){bottom:-2px;right:-2px;border-left:0;border-top:0;border-radius:0 0 22px 0}
+.scan-frame::after{content:'';position:absolute;left:8%;right:8%;height:2px;top:10%;background:linear-gradient(90deg,transparent,var(--gold),transparent);animation:sweep 2s ease-in-out infinite}
+@keyframes sweep{50%{top:88%}}
+.scan-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:12px;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;font:600 17px 'Kanit'}
+.scan-top button{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.15);color:#fff;font-size:20px;flex:none}
+.scan-bottom{position:absolute;left:0;right:0;bottom:0;padding:16px 16px calc(28px + env(safe-area-inset-bottom));text-align:center}
+.scan-bottom p{margin:0 0 14px;font-size:15px;color:rgba(255,255,255,.88)}
+
+/* ---------- feedback ---------- */
+#toasts{position:fixed;top:calc(12px + env(safe-area-inset-top));left:0;right:0;z-index:80;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px}
+.toast{max-width:480px;background:#1d2b25;color:#fff;border-radius:14px;padding:11px 16px;font-size:14.5px;box-shadow:0 8px 24px rgba(0,0,0,.4);border-left:4px solid var(--up-l);animation:tin .25s ease;transition:opacity .35s,transform .35s}
+.toast.err{border-left-color:var(--down-l)}.toast.warn{border-left-color:var(--gold)}
+.toast.out{opacity:0;transform:translateY(-8px)}
+@keyframes tin{from{opacity:0;transform:translateY(-10px)}}
+.flash{position:fixed;inset:0;z-index:90;display:grid;place-items:center;pointer-events:none}
+.flash .fc{background:var(--paper);color:var(--ink);border-radius:28px;padding:26px 36px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:pop .4s cubic-bezier(.2,1.4,.4,1)}
+.flash .fa{font:700 60px/1 'Kanit';font-variant-numeric:tabular-nums}
+.flash .fa.in{color:var(--up)}.flash .fa.out{color:var(--ink)}
+.flash .ft{font:600 17px 'Kanit';margin-top:8px}
+.flash .fi{font-size:40px;line-height:1}
+.flash.out .fc{opacity:0;transform:scale(.92);transition:all .3s}
+@keyframes pop{from{opacity:0;transform:scale(.6)}}
+#offline{position:fixed;top:0;left:0;right:0;z-index:70;background:var(--red);color:#fff;text-align:center;font-size:13.5px;font-weight:600;padding:calc(6px + env(safe-area-inset-top)) 10px 6px}
+</style>
+</head>
+<body>
+<div id="offline" hidden>ออฟไลน์ — กำลังเชื่อมต่อใหม่… (ยังจ่ายชิปไม่ได้)</div>
+
+<div id="app">
+  <!-- BOOT -->
+  <section class="scr on" id="scr-boot">
+    <div class="boot"><svg viewBox="0 0 48 48"><use href="#chip"/></svg><div id="bootMsg">กำลังโหลด…</div></div>
+  </section>
+
+  <!-- SETUP -->
+  <section class="scr" id="scr-setup">
+    <div class="hero"><svg viewBox="0 0 48 48"><use href="#chip"/></svg><h1>ชิปวงไพ่</h1><p>จ่ายชิปด้วยการสแกน QR ไม่ต้องใช้เงินสด</p></div>
+    <div class="card">
+      <h2>🔌 เชื่อมฐานข้อมูล <span class="muted" style="font-weight:400;font-size:13px">(เจ้ามือทำครั้งเดียว)</span></h2>
+      <label class="field"><span>Database URL ของ Firebase</span>
+        <textarea class="inp" id="setupUrl" rows="2" placeholder="https://ชื่อโปรเจกต์-default-rtdb.asia-southeast1.firebasedatabase.app"></textarea></label>
+      <button class="btn gold block" data-act="setupConnect" id="setupBtn">เชื่อมต่อ</button>
+      <details class="help">
+        <summary>วิธีสร้าง Firebase ฟรี (5 นาที) ▾</summary>
+        <ol>
+          <li>เข้า <b>console.firebase.google.com</b> → สร้างโปรเจกต์ใหม่ (ปิด Google Analytics ได้)</li>
+          <li>เมนู <b>Build → Realtime Database → Create Database</b> → เลือก <b>Singapore</b> → เลือก <b>Start in test mode</b></li>
+          <li>แท็บ <b>Rules</b> วางกฎนี้แล้วกด <b>Publish</b> (test mode หมดอายุ 30 วัน)
+<pre>{
+  "rules": {
+    "paiToken": { ".read": true, ".write": true }
+  }
+}</pre></li>
+          <li>แท็บ <b>Data</b> กดคัดลอกลิงก์ด้านบน (ขึ้นต้น https:// ลงท้าย firebasedatabase.app) แล้ววางในช่องด้านบน</li>
+        </ol>
+      </details>
+    </div>
+    <div class="or">หรือ</div>
+    <button class="btn ghost block" data-act="scanJoin">📷 สแกน QR เชิญจากเพื่อน</button>
+  </section>
+
+  <!-- LOBBY -->
+  <section class="scr" id="scr-lobby">
+    <div class="brand" style="margin:6px 0 var(--s3)"><svg viewBox="0 0 48 48"><use href="#chip"/></svg><div><h1>ชิปวงไพ่</h1><small>สร้างวง หรือเข้าวงเพื่อน</small></div></div>
+    <div id="recentWrap" hidden><div class="muted">วงล่าสุด</div><div class="recent" id="recent"></div></div>
+    <div class="card">
+      <h2>🃏 เข้าวงเพื่อน</h2>
+      <div class="row">
+        <input class="inp grow num" id="joinCode" maxlength="8" placeholder="รหัสวง เช่น K7PQX" autocapitalize="characters" autocomplete="off" style="letter-spacing:.12em;text-transform:uppercase">
+        <button class="btn gold" data-act="joinCode">เข้า</button>
+      </div>
+      <button class="btn ghost block" style="margin-top:var(--s2)" data-act="scanJoin">📷 สแกน QR เชิญ</button>
+    </div>
+    <div class="card">
+      <h2>✨ สร้างวงใหม่ <span class="muted" style="font-weight:400;font-size:13px">(คุณเป็นเจ้ามือ)</span></h2>
+      <label class="field"><span>ชื่อวง</span><input class="inp" id="cName" maxlength="30" placeholder="เช่น วงบ้านโฟน"></label>
+      <label class="field"><span>ชื่อของคุณ</span><input class="inp" id="cMe" maxlength="20" placeholder="เช่น โฟน"></label>
+      <div class="grid2">
+        <label class="field"><span>ทุนเริ่มต้น/คน</span><input class="inp num" id="cStart" type="number" inputmode="numeric" min="0" value="100"></label>
+        <label class="field"><span>PIN เจ้ามือ (4-6 หลัก)</span><input class="inp num" id="cPin" type="password" inputmode="numeric" maxlength="6" placeholder="••••"></label>
+      </div>
+      <label class="toggle"><span>อนุญาตให้ติดลบ<small>ชิปหมดแล้วยังจ่ายต่อได้ (เป็นหนี้)</small></span><input type="checkbox" id="cNeg"></label>
+      <button class="btn gold block" style="margin-top:var(--s1)" data-act="createRoom" id="createBtn">สร้างวง</button>
+    </div>
+    <p class="foot"><button class="muted" style="text-decoration:underline" data-act="changeDb">เปลี่ยนฐานข้อมูล Firebase</button></p>
+  </section>
+
+  <!-- PICK NAME -->
+  <section class="scr" id="scr-pick">
+    <div class="pickhead"><h1>คุณคือใคร?</h1><div class="muted" id="pickRoom"></div><div class="codepill" id="pickCode"></div></div>
+    <div class="list" id="pickList"></div>
+    <div class="card" id="pickNew">
+      <h2>➕ สร้างชื่อใหม่</h2>
+      <div class="row"><input class="inp grow" id="pName" maxlength="20" placeholder="ชื่อของคุณ"><button class="btn gold" data-act="pickCreate">เข้าวง</button></div>
+      <div class="muted" style="margin-top:8px" id="pickStart"></div>
+    </div>
+    <div class="card" id="pickClosed" hidden><div class="muted">เจ้ามือปิดการสร้างชื่อเอง — ให้เจ้ามือเพิ่มชื่อให้ แล้วกดเลือกชื่อด้านบน</div></div>
+    <div class="row" style="margin-top:var(--s3);justify-content:center;gap:var(--s2)">
+      <button class="btn ghost sm" data-act="leaveRoom">← ออกจากวงนี้</button>
+      <button class="btn ghost sm" data-act="adminUnlock" id="pickAdm">🔑 เจ้ามือ</button>
+    </div>
+  </section>
+
+  <!-- MAIN -->
+  <section class="scr" id="scr-main">
+    <div class="top">
+      <div class="brand"><svg viewBox="0 0 48 48"><use href="#chip"/></svg><div style="min-width:0"><h1 id="hRoom"></h1><small id="hSub"></small></div></div>
+      <button class="codepill" data-act="invite"><span class="dot"></span><span id="hCode"></span></button>
+      <button class="iconbtn" data-act="menu" aria-label="เมนู"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+    </div>
+    <div class="admbar" id="admBar" hidden><span>👑</span><span class="grow"><b>โหมดเจ้ามือ</b> · แตะชื่อเพื่อเติม/หักชิป</span><button class="btn sm cream" style="height:32px" data-act="adminLock">ล็อก</button></div>
+
+    <div class="bal">
+      <div class="pip tl">A<i>♣</i></div><div class="pip br">A<i>♣</i></div>
+      <div class="who"><span id="mAva"></span><span id="mName"></span></div>
+      <div class="lbl">ชิปของคุณ</div>
+      <div class="amt" id="mBal"><svg viewBox="0 0 48 48"><use href="#chip"/></svg><span>0</span></div>
+      <div class="net" id="mNet"></div>
+    </div>
+
+    <div class="acts">
+      <button class="btn gold" data-act="scanPay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>สแกนจ่าย</button>
+      <button class="btn cream" data-act="receive"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm13-2h3v3h-3zm-5 0h3v3h-3zm3 3h3v3h-3zm-3 3h3v2h-3zm5 0h3v2h-3z"/></svg>QR รับ</button>
+    </div>
+
+    <div class="admtools" id="admTools" hidden>
+      <button class="btn" data-act="addPlayer">➕ เพิ่มชื่อ</button>
+      <button class="btn" data-act="settings">⚙️ ตั้งค่าวง</button>
+      <button class="btn" data-act="resetAll">♻️ รีเซ็ต</button>
+    </div>
+
+    <div class="tabs"><button class="on" data-act="tab" data-t="p" id="tabP">ผู้เล่น</button><button data-act="tab" data-t="l" id="tabL">ประวัติ</button></div>
+    <div id="viewP"><div class="list" id="players"></div><div class="foot" id="pFoot"></div></div>
+    <div id="viewL" hidden><div id="logList"></div></div>
+  </section>
+</div>
+
+<div id="sheetWrap" class="sheet-wrap" hidden><div class="backdrop" data-act="dismiss"></div><div class="sheet" id="sheet"></div></div>
+
+<div id="scan" class="scan" hidden>
+  <video id="scanVideo" playsinline muted autoplay></video>
+  <div class="scan-frame"><i></i><i></i><i></i><i></i></div>
+  <div class="scan-top"><button data-act="dismiss" aria-label="ปิด">✕</button><span id="scanTitle"></span></div>
+  <div class="scan-bottom"><p id="scanMsg"></p><button class="btn cream" data-act="scanList" id="scanAlt">เลือกจากรายชื่อแทน</button></div>
+</div>
+<div id="toasts"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="chip" viewBox="0 0 48 48">
+    <circle cx="24" cy="24" r="22" fill="#cf4a3f"/>
+    <circle cx="24" cy="24" r="19.5" fill="none" stroke="#f5eedb" stroke-width="5" stroke-dasharray="5.1 5.1"/>
+    <circle cx="24" cy="24" r="13.5" fill="#f5eedb"/>
+    <circle cx="24" cy="24" r="10.5" fill="none" stroke="#cf4a3f" stroke-width="1.4" stroke-dasharray="2 2.2"/>
+    <path d="M24 17.5c-1.6 0-2.9 1.3-2.9 2.9 0 .5.1.9.3 1.3-.4-.2-.8-.3-1.3-.3-1.6 0-2.9 1.3-2.9 2.9s1.3 2.9 2.9 2.9c.9 0 1.7-.4 2.3-1.1l-.9 3.4h5l-.9-3.4c.5.7 1.3 1.1 2.3 1.1 1.6 0 2.9-1.3 2.9-2.9s-1.3-2.9-2.9-2.9c-.5 0-.9.1-1.3.3.2-.4.3-.8.3-1.3 0-1.6-1.3-2.9-2.9-2.9z" fill="#13281f"/>
+  </symbol>
+</svg>
+
+<script>
+'use strict';
+/* =====================================================================
+   ชิปวงไพ่ — ระบบชิปจ่ายด้วย QR (Firebase Realtime Database)
+   ---------------------------------------------------------------------
+   (ไม่บังคับ) ใส่ Database URL ตรงนี้ เพื่อให้ทุกเครื่องไม่ต้องตั้งค่าเอง
+   ตัวอย่าง: const DB_URL = 'https://xxx-default-rtdb.asia-southeast1.firebasedatabase.app';
+   ===================================================================== */
+const DB_URL = '';
+
+const ROOT = 'paiToken/rooms';
+const JSQR_URL = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+const EMO = ['🐯','🐼','🦊','🐸','🐵','🐨','🦁','🐷','🐰','🐻','🐧','🐮','🐙','🦄','🐲','🐳','🦉','🐺','🦀','🐝'];
+const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const BASE = location.href.split('#')[0].split('?')[0];
+const DB_RE = /https:\/\/[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:firebaseio\.com|firebasedatabase\.app)/i;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Math.round(n || 0).toLocaleString('th-TH');
+const sgn = n => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n));
+const LS = {
+  get(k, d = null){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k){ try { localStorage.removeItem(k); } catch {} }
+};
+const rnd = (n, ch) => { const a = crypto.getRandomValues(new Uint32Array(n)); let s = ''; for (const x of a) s += ch[x % ch.length]; return s; };
+const newId = () => rnd(10, 'abcdefghijkmnopqrstuvwxyz23456789');
+const DEV = LS.get('pc.dev') || (() => { const d = newId(); LS.set('pc.dev', d); return d; })();
+const TS = () => firebase.database.ServerValue.TIMESTAMP;
+const withTimeout = (p, ms = 12000) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function hashPin(room, pin){ // ล็อกเบาๆ กันกดเล่น ไม่ใช่ความปลอดภัยระดับธนาคาร
+  let h1 = 0x811c9dc5, h2 = 0x01000193; const s = `pc|${room}|${pin}|chip`;
+  for (let i = 0; i < s.length; i++){ const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619); h2 = Math.imul(h2 ^ c, 2246822519) ^ (h2 >>> 13); }
+  return (h1 >>> 0).toString(16).padStart(8, '0') + (h2 >>> 0).toString(16).padStart(8, '0');
+}
+function errMsg(e){
+  const m = String(e && e.message || e || '');
+  if (/permission/i.test(m)) return 'ฐานข้อมูลไม่อนุญาต — ตั้งค่า Rules ใน Firebase ก่อน';
+  if (/timeout/i.test(m)) return 'เชื่อมต่อฐานข้อมูลไม่ได้ — เช็กอินเทอร์เน็ต / Database URL';
+  return m || 'เกิดข้อผิดพลาด';
+}
+function loadScript(src){ return new Promise((ok, no) => { if ([...document.scripts].some(s => s.src === src)) return ok(); const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.append(s); }); }
+function cleanName(n){ return String(n || '').replace(/\s+/g, ' ').trim().slice(0, 20); }
+
+/* ---------- state ---------- */
+const S = { db:null, dbUrl:'', room:null, meta:null, players:{}, loaded:false, log:[], seen:null, me:null, admin:false,
+  connected:false, subs:[], view:'', pend:null, sheet:null, hist:false, scan:null, wake:null, tab:'p',
+  pay:{to:null, amt:0, req:0, busy:false}, req:0, adm:{pid:null, d:0, busy:false}, lastBal:null, audio:null };
+
+/* ---------- screens / feedback ---------- */
+function show(id){ document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id === 'scr-' + id)); window.scrollTo(0, 0); }
+function setBoot(m){ $('#bootMsg').textContent = m; show('boot'); }
+function toast(msg, kind = 'ok', ms = 2800){
+  const el = document.createElement('div'); el.className = 'toast ' + kind; el.textContent = msg; $('#toasts').append(el);
+  setTimeout(() => el.classList.add('out'), ms); setTimeout(() => el.remove(), ms + 400);
+}
+function flash(icon, amt, text, cls){
+  const el = document.createElement('div'); el.className = 'flash';
+  el.innerHTML = `<div class="fc"><div class="fi">${icon}</div><div class="fa num ${cls}">${esc(amt)}</div><div class="ft">${esc(text)}</div></div>`;
+  document.body.append(el); setTimeout(() => el.classList.add('out'), 1500); setTimeout(() => el.remove(), 1850);
+}
+function buzz(p){ try { navigator.vibrate && navigator.vibrate(p); } catch {} }
+function ding(up = true){
+  try {
+    const A = S.audio || (S.audio = new (window.AudioContext || window.webkitAudioContext)());
+    const t = A.currentTime; [0, .09].forEach((d, i) => {
+      const o = A.createOscillator(), g = A.createGain(); o.type = 'triangle';
+      o.frequency.value = up ? [880, 1320][i] : [660, 440][i];
+      g.gain.setValueAtTime(.0001, t + d); g.gain.exponentialRampToValueAtTime(.25, t + d + .02); g.gain.exponentialRampToValueAtTime(.0001, t + d + .35);
+      o.connect(g).connect(A.destination); o.start(t + d); o.stop(t + d + .4);
+    });
+  } catch {}
+}
+document.addEventListener('pointerdown', () => { if (!S.audio) { try { S.audio = new (window.AudioContext || window.webkitAudioContext)(); } catch {} } }, { once:true });
+
+/* ---------- sheets & history (ปุ่ม Back ของ Android ปิดหน้าต่าง) ---------- */
+function pushHist(){ if (!S.hist){ history.pushState({ pc:1 }, ''); S.hist = true; } }
+function openSheet(kind, html){
+  pushHist(); S.sheet = kind; $('#sheet').innerHTML = html; $('#sheet').scrollTop = 0;
+  const w = $('#sheetWrap'); w.hidden = false; requestAnimationFrame(() => requestAnimationFrame(() => w.classList.add('open')));
+}
+function _closeSheet(){
+  if (!S.sheet) return; S.sheet = null; wakeOff();
+  const w = $('#sheetWrap'); w.classList.remove('open');
+  setTimeout(() => { if (!S.sheet){ w.hidden = true; $('#sheet').innerHTML = ''; } }, 260);
+}
+function dismiss(){ closeScanner(); _closeSheet(); if (S.hist){ S.hist = false; history.back(); } }
+window.addEventListener('popstate', () => { if (S.hist){ S.hist = false; closeScanner(); _closeSheet(); } });
+async function wakeOn(){ try { if (navigator.wakeLock) S.wake = await navigator.wakeLock.request('screen'); } catch {} }
+function wakeOff(){ try { S.wake && S.wake.release(); } catch {} S.wake = null; }
+
+/* ---------- links & QR ---------- */
+function normDb(s){ if (!s) return ''; s = String(s).trim(); if (!/^https?:\/\//i.test(s)) s = 'https://' + s; const m = s.match(DB_RE); return m ? m[0].toLowerCase() : ''; }
+function payLink(pid, amt){ return `${BASE}#p=${S.room}.${pid}${amt > 0 ? '.' + amt : ''}`; }
+function joinLink(){ return `${BASE}#j=${S.room}` + (DB_URL ? '' : '&d=' + encodeURIComponent(S.dbUrl.replace(/^https:\/\//, ''))); }
+function parseLink(text){
+  if (!text) return null; text = String(text).trim();
+  const i = text.indexOf('#'); if (i < 0) return null;
+  const q = new URLSearchParams(text.slice(i + 1));
+  if (q.get('p')){ const [room, pid, amt] = q.get('p').split('.'); if (room && pid) return { type:'p', room:room.toUpperCase(), pid, amt:Math.max(0, parseInt(amt) || 0) }; }
+  if (q.get('j')) return { type:'j', room:q.get('j').toUpperCase(), db:normDb(q.get('d')) };
+  return null;
+}
+function qrSvg(text){
+  const q = qrcode(0, 'M'); q.addData(text); q.make();
+  const n = q.getModuleCount(), m = 2; let d = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${c + m} ${r + m}h1v1h-1z`;
+  return `<svg viewBox="0 0 ${n + 2 * m} ${n + 2 * m}" shape-rendering="crispEdges" role="img" aria-label="QR"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#0b1f18"/></svg>`;
+}
+
+/* ---------- firebase ---------- */
+function initDB(url){
+  if (typeof firebase === 'undefined'){ toast('โหลด Firebase ไม่ได้ — เช็กอินเทอร์เน็ตแล้วรีเฟรช', 'err', 5000); return false; }
+  try {
+    firebase.initializeApp({ databaseURL:url }); S.db = firebase.database(); S.dbUrl = url;
+    S.db.ref('.info/connected').on('value', s => {
+      S.connected = !!s.val(); clearTimeout(S.offT);
+      document.body.classList.toggle('online', S.connected);
+      if (S.connected) $('#offline').hidden = true; else S.offT = setTimeout(() => { if (S.room) $('#offline').hidden = false; }, 3500);
+      if (S.sheet === 'pay') updPay();
+    });
+    return true;
+  } catch (e){ toast('ตั้งค่าฐานข้อมูลไม่สำเร็จ: ' + e.message, 'err', 5000); return false; }
+}
+async function resetDB(){ unsubscribe(); try { if (firebase.apps.length) await firebase.app().delete(); } catch {} S.db = null; S.dbUrl = ''; }
+const R = p => S.db.ref(`${ROOT}/${S.room}` + (p ? '/' + p : ''));
+function listen(ref, ev, cb){ ref.on(ev, cb, e => toast(errMsg(e), 'err', 5000)); S.subs.push([ref, ev, cb]); }
+function unsubscribe(){ for (const [r, e, c] of S.subs) try { r.off(e, c); } catch {} S.subs = []; }
+
+/* ---------- boot ---------- */
+async function boot(){
+  const h = parseLink(location.hash);
+  if (location.hash) history.replaceState(null, '', BASE);
+  if (h && h.type === 'j' && h.db && !DB_URL) LS.set('pc.db', h.db);
+  const url = DB_URL || LS.get('pc.db');
+  if (!url){ if (h) toast('ต้องเชื่อมฐานข้อมูลก่อน — ให้เจ้ามือส่ง QR เชิญให้', 'warn', 4500); return show('setup'); }
+  if (!initDB(url)) return show('setup');
+  if (h && h.type === 'j') return enterRoom(h.room);
+  const room = LS.get('pc.room');
+  if (!room){ if (h) toast('ยังไม่ได้เข้าวง — เข้าวงก่อนแล้วสแกนใหม่', 'warn', 4000); return showLobby(); }
+  enterRoom(room, h && h.type === 'p' ? h : null);
+}
+
+/* ---------- setup ---------- */
+async function setupConnect(){
+  const url = normDb($('#setupUrl').value);
+  if (!url) return toast('ไม่พบ Database URL — ต้องขึ้นต้น https:// และลงท้าย firebasedatabase.app หรือ firebaseio.com', 'err', 5000);
+  const b = $('#setupBtn'); b.disabled = true; b.textContent = 'กำลังทดสอบ…';
+  try {
+    if (S.db && S.dbUrl !== url) await resetDB();
+    if (!S.db && !initDB(url)) throw new Error('init');
+    await withTimeout(S.db.ref('paiToken/ping').set(TS()), 12000);
+    LS.set('pc.db', url); toast('เชื่อมต่อสำเร็จ 🎉'); showLobby();
+  } catch (e){ if (e.message !== 'init') toast(errMsg(e), 'err', 6000); }
+  finally { b.disabled = false; b.textContent = 'เชื่อมต่อ'; }
+}
+
+/* ---------- lobby ---------- */
+function showLobby(){
+  unsubscribe(); _closeSheet(); $('#offline').hidden = true;
+  Object.assign(S, { room:null, meta:null, players:{}, loaded:false, me:null, admin:false, log:[], seen:null, view:'lobby', lastBal:null });
+  const rs = LS.get('pc.rooms', []);
+  $('#recentWrap').hidden = !rs.length;
+  $('#recent').innerHTML = rs.map(r => `<button data-act="recent" data-code="${esc(r.c)}">${esc(r.n)}<b>${esc(r.c)}</b></button>`).join('');
+  show('lobby');
+}
+function rememberRoom(c, n){ const rs = LS.get('pc.rooms', []).filter(r => r.c !== c); rs.unshift({ c, n }); LS.set('pc.rooms', rs.slice(0, 6)); }
+function forgetRoom(c){ LS.set('pc.rooms', LS.get('pc.rooms', []).filter(r => r.c !== c)); if (LS.get('pc.room') === c) LS.del('pc.room'); }
+
+async function createRoom(){
+  const name = String($('#cName').value).trim().slice(0, 30) || 'วงไพ่';
+  const me = cleanName($('#cMe').value);
+  const start = Math.max(0, parseInt($('#cStart').value) || 0);
+  const pin = String($('#cPin').value).trim();
+  const neg = $('#cNeg').checked;
+  if (!me) return toast('ใส่ชื่อของคุณก่อน', 'warn');
+  if (!/^\d{4,6}$/.test(pin)) return toast('PIN เจ้ามือต้องเป็นตัวเลข 4-6 หลัก', 'warn');
+  const b = $('#createBtn'); b.disabled = true; b.textContent = 'กำลังสร้าง…';
+  try {
+    let code = '';
+    for (let i = 0; i < 6; i++){ const c = rnd(5, CODE_CH); const s = await withTimeout(S.db.ref(`${ROOT}/${c}/meta`).once('value')); if (!s.exists()){ code = c; break; } }
+    if (!code) throw new Error('สุ่มรหัสวงไม่สำเร็จ ลองใหม่');
+    const pid = newId(), ph = hashPin(code, pin), logKey = S.db.ref().push().key;
+    await withTimeout(S.db.ref(`${ROOT}/${code}`).set({
+      meta:{ name, start, neg, self:true, pin:ph, at:TS() },
+      players:{ [pid]:{ name:me, bal:start, issued:start, e:EMO[0], dev:DEV, at:TS() } },
+      log:{ [logKey]:{ t:TS(), k:'open', tn:me, te:EMO[0], a:start } }
+    }));
+    LS.set('pc.me.' + code, pid); LS.set('pc.adm.' + code, ph);
+    $('#cPin').value = '';
+    await enterRoom(code);
+    setTimeout(() => toast('สร้างวงแล้ว — กดรหัสวงมุมขวาบนเพื่อเชิญเพื่อน', 'ok', 4500), 400);
+  } catch (e){ toast(errMsg(e), 'err', 5000); }
+  finally { b.disabled = false; b.textContent = 'สร้างวง'; }
+}
+
+async function enterRoom(code, pend){
+  code = String(code || '').trim().toUpperCase();
+  if (!/^[A-Z0-9]{4,8}$/.test(code)){ toast('รหัสวงไม่ถูกต้อง', 'err'); return showLobby(); }
+  setBoot('กำลังเข้าวง ' + code + '…');
+  let snap;
+  try { snap = await withTimeout(S.db.ref(`${ROOT}/${code}/meta`).once('value')); }
+  catch (e){ toast(errMsg(e), 'err', 5000); return showLobby(); }
+  if (!snap.exists()){ toast('ไม่พบวงรหัส ' + code, 'err'); forgetRoom(code); return showLobby(); }
+  unsubscribe();
+  Object.assign(S, { room:code, meta:snap.val(), players:{}, loaded:false, log:[], seen:null, view:'', pend:pend || null, lastBal:null });
+  S.me = LS.get('pc.me.' + code);
+  S.admin = !!S.meta.pin && LS.get('pc.adm.' + code) === S.meta.pin;
+  LS.set('pc.room', code); rememberRoom(code, S.meta.name);
+  subscribe();
+}
+function leaveRoom(){
+  if (S.room){ LS.del('pc.room'); }
+  dismiss(); showLobby();
+}
+
+function subscribe(){
+  listen(R('meta'), 'value', s => {
+    const m = s.val();
+    if (!m){ const c = S.room; toast('วงนี้ถูกปิดแล้ว', 'warn', 4000); forgetRoom(c); LS.del('pc.me.' + c); return showLobby(); }
+    S.meta = m; S.admin = !!m.pin && LS.get('pc.adm.' + S.room) === m.pin; route();
+  });
+  listen(R('players'), 'value', s => { S.players = s.val() || {}; S.loaded = true; route(); });
+  listen(R('log').limitToLast(80), 'value', s => {
+    const a = []; s.forEach(c => { a.push(Object.assign({ k:c.key }, c.val())); });
+    if (!S.seen) S.seen = new Set(a.map(e => e.k));
+    else for (const e of a) if (!S.seen.has(e.k)){ S.seen.add(e.k); notify(e); }
+    S.log = a.reverse(); renderLog();
+  });
+}
+
+/* ---------- routing / render ---------- */
+function route(){
+  if (!S.room || !S.meta || !S.loaded) return;
+  const me = S.me && S.players[S.me];
+  if (!me){
+    if (S.me){ LS.del('pc.me.' + S.room); S.me = null; toast('ชื่อของคุณถูกลบออกจากวง — เลือกชื่อใหม่', 'warn', 4000); dismiss(); }
+    if (S.view !== 'pick'){ S.view = 'pick'; show('pick'); }
+    return renderPick();
+  }
+  if (S.view !== 'main'){ S.view = 'main'; show('main'); }
+  renderMain(); renderLog();
+  if (S.pend){ const p = S.pend; S.pend = null; setTimeout(() => handlePayLink(p), 200); }
+  if (S.sheet === 'pay') updPay();
+  if (S.sheet === 'adm') updAdm();
+}
+const sorted = () => Object.entries(S.players).map(([id, p]) => Object.assign({ id }, p)).sort((a, b) => (b.bal || 0) - (a.bal || 0) || String(a.name).localeCompare(b.name, 'th'));
+function netHtml(p, cls = ''){ const n = (p.bal || 0) - (p.issued || 0); return n > 0 ? `<small class="up ${cls}">+${fmt(n)}</small>` : n < 0 ? `<small class="down ${cls}">−${fmt(-n)}</small>` : `<small class="even ${cls}">เท่าทุน</small>`; }
+function prowHtml(p, i, act = 'player'){
+  const isMe = p.id === S.me;
+  return `<button class="prow${isMe ? ' me' : ''}" data-act="${act}" data-id="${esc(p.id)}">
+    <span class="ava">${esc(p.e || '🙂')}</span>
+    <span class="pname">${esc(p.name)}${isMe ? '<em>คุณ</em>' : ''}${i != null ? `<small>อันดับ ${i + 1}</small>` : ''}</span>
+    <span class="pnum"><b>${fmt(p.bal)}</b>${netHtml(p)}</span></button>`;
+}
+function renderPick(){
+  $('#pickRoom').textContent = S.meta.name;
+  $('#pickCode').innerHTML = `<span class="dot"></span>${esc(S.room)}`;
+  const ps = Object.entries(S.players).map(([id, p]) => Object.assign({ id }, p)).sort((a, b) => String(a.name).localeCompare(b.name, 'th'));
+  $('#pickList').innerHTML = ps.length ? ps.map(p => `<button class="prow" data-act="claim" data-id="${esc(p.id)}">
+      <span class="ava">${esc(p.e || '🙂')}</span><span class="pname">${esc(p.name)}<small>${p.dev && p.dev !== DEV ? '📱 มีเครื่องอื่นใช้ชื่อนี้อยู่' : 'แตะเพื่อเลือก'}</small></span>
+      <span class="pnum"><b>${fmt(p.bal)}</b><small class="even">ชิป</small></span></button>`).join('')
+    : '<div class="empty">ยังไม่มีผู้เล่น — สร้างชื่อด้านล่างได้เลย</div>';
+  const can = S.meta.self !== false || S.admin;
+  $('#pickNew').hidden = !can; $('#pickClosed').hidden = can;
+  $('#pickStart').textContent = `ได้ทุนเริ่มต้น ${fmt(S.meta.start)} ชิป`;
+  $('#pickAdm').hidden = S.admin;
+}
+function renderMain(){
+  const me = S.players[S.me];
+  $('#hRoom').textContent = S.meta.name;
+  $('#hSub').textContent = `${Object.keys(S.players).length} คน · ทุน ${fmt(S.meta.start)}${S.meta.neg ? ' · ติดลบได้' : ''}`;
+  $('#hCode').textContent = S.room;
+  $('#mAva').textContent = me.e || '🙂'; $('#mName').textContent = me.name;
+  const el = $('#mBal'), bal = me.bal || 0;
+  el.querySelector('span').textContent = (bal < 0 ? '−' : '') + fmt(Math.abs(bal));
+  el.classList.toggle('neg', bal < 0);
+  if (S.lastBal !== null && S.lastBal !== bal){
+    const c = bal > S.lastBal ? 'gain' : 'loss'; el.classList.remove('bump', 'gain', 'loss'); void el.offsetWidth; el.classList.add('bump', c);
+    clearTimeout(S.balT); S.balT = setTimeout(() => el.classList.remove('gain', 'loss'), 1200);
+  }
+  S.lastBal = bal;
+  const n = bal - (me.issued || 0);
+  $('#mNet').innerHTML = n > 0 ? `ได้ <span class="up">+${fmt(n)}</span> จากทุน ${fmt(me.issued)}` : n < 0 ? `เสีย <span class="down">−${fmt(-n)}</span> จากทุน ${fmt(me.issued)}` : `เท่าทุน (${fmt(me.issued)})`;
+  $('#admBar').hidden = !S.admin; $('#admTools').hidden = !S.admin;
+  const ps = sorted();
+  $('#players').innerHTML = ps.map((p, i) => prowHtml(p, i)).join('');
+  const tot = ps.reduce((s, p) => s + (p.bal || 0), 0);
+  $('#pFoot').textContent = `ชิปทั้งวง ${fmt(tot)} · ${S.admin ? 'แตะชื่อเพื่อเติม/หัก' : 'แตะชื่อเพื่อจ่ายให้'}`;
+}
+function hm(t){ if (!t) return ''; const d = new Date(t), now = new Date(); const p = x => String(x).padStart(2, '0'); return d.toDateString() === now.toDateString() ? `${p(d.getHours())}:${p(d.getMinutes())}` : `${d.getDate()}/${d.getMonth() + 1}`; }
+function logLine(e){
+  const nm = (n, em) => `${esc(em || '')} ${esc(n || '?')}`;
+  switch (e.k){
+    case 'pay': { const cls = e.to === S.me ? 'in' : e.f === S.me ? 'out' : ''; return [`${nm(e.fn, e.fe)} → ${nm(e.tn, e.te)}${e.x ? '<span class="tag">ยกเลิกแล้ว</span>' : ''}`, (cls === 'in' ? '+' : cls === 'out' ? '−' : '') + fmt(e.a), cls]; }
+    case 'adj': return [`👑 เจ้ามือ${e.a >= 0 ? 'เติม' : 'หัก'} ${nm(e.tn, e.te)}`, sgn(e.a), e.to === S.me ? (e.a >= 0 ? 'in' : 'out') : ''];
+    case 'new': return [`${nm(e.tn, e.te)} เข้าวง`, fmt(e.a), ''];
+    case 'open': return [`🎉 เปิดวงโดย ${nm(e.tn, e.te)}`, fmt(e.a), ''];
+    case 'del': return [`🗑️ ลบ ${nm(e.tn, e.te)} (มี ${fmt(e.a)})`, '', ''];
+    case 'ren': return [`✏️ ${esc(e.fn)} → ${esc(e.tn)}`, '', ''];
+    case 'reset': return [`♻️ รีเซ็ตทุกคนเป็น ${fmt(e.a)}`, '', ''];
+    case 'rev': return [`↩️ ยกเลิก ${nm(e.fn, e.fe)} → ${nm(e.tn, e.te)}`, fmt(e.a), ''];
+    default: return [esc(e.k), '', ''];
+  }
+}
+function renderLog(){
+  if (S.view !== 'main') return;
+  $('#logList').innerHTML = S.log.length ? S.log.map(e => {
+    const [d, a, c] = logLine(e);
+    const tap = S.admin && e.k === 'pay' && !e.x;
+    return `<${tap ? 'button' : 'div'} class="lrow${e.x ? ' x' : ''}"${tap ? ` data-act="logRev" data-k="${esc(e.k)}"` : ''}><span class="t">${hm(e.t)}</span><span class="d">${d}</span><span class="a ${c}">${a}</span></${tap ? 'button' : 'div'}>`;
+  }).join('') + (S.admin ? '<div class="foot">เจ้ามือแตะรายการจ่ายเพื่อยกเลิกได้</div>' : '')
+    : '<div class="empty">ยังไม่มีรายการ</div>';
+}
+function setTab(t){ S.tab = t; $('#tabP').classList.toggle('on', t === 'p'); $('#tabL').classList.toggle('on', t === 'l'); $('#viewP').hidden = t !== 'p'; $('#viewL').hidden = t !== 'l'; }
+
+function notify(e){
+  if (!S.me) return;
+  if (e.k === 'pay' && e.to === S.me){ flash(e.fe || '💰', '+' + fmt(e.a), 'จาก ' + (e.fn || '?'), 'in'); ding(true); buzz([70, 50, 70]); }
+  else if (e.k === 'adj' && e.to === S.me){ toast(`👑 เจ้ามือ${e.a >= 0 ? 'เติม' : 'หัก'}ชิปคุณ ${sgn(e.a)}`, e.a >= 0 ? 'ok' : 'warn', 3500); ding(e.a >= 0); buzz(60); }
+  else if (e.k === 'rev' && (e.f === S.me || e.to === S.me)) toast(`↩️ เจ้ามือยกเลิกรายการ ${e.fn} → ${e.tn} ${fmt(e.a)}`, 'warn', 4000);
+  else if (e.k === 'reset') toast(`♻️ เจ้ามือรีเซ็ตชิปทุกคนเป็น ${fmt(e.a)}`, 'warn', 4000);
+}
+
+/* ---------- pick / claim ---------- */
+async function claim(pid){
+  const p = S.players[pid]; if (!p) return;
+  if (p.dev && p.dev !== DEV && !S.admin){
+    const pin = prompt(`ชื่อ "${p.name}" มีเครื่องอื่นใช้อยู่\nถ้าเป็นคุณจริง (เช่น เปลี่ยนเครื่อง) ให้เจ้ามือใส่ PIN:`);
+    if (pin === null) return;
+    if (hashPin(S.room, pin.trim()) !== S.meta.pin) return toast('PIN ไม่ถูกต้อง', 'err');
+  } else if (p.dev && p.dev !== DEV && !confirm(`ชื่อ "${p.name}" มีเครื่องอื่นใช้อยู่ ใช้บนเครื่องนี้แทนไหม?`)) return;
+  try { await withTimeout(R(`players/${pid}/dev`).set(DEV)); } catch (e){ return toast(errMsg(e), 'err'); }
+  S.me = pid; LS.set('pc.me.' + S.room, pid); S.lastBal = null; route();
+  toast(`สวัสดี ${p.name} 👋`);
+}
+async function createPlayer(name, bal, mine){
+  name = cleanName(name);
+  if (!name) throw new Error('ใส่ชื่อก่อน');
+  if (Object.values(S.players).some(p => String(p.name).toLowerCase() === name.toLowerCase())) throw new Error('มีชื่อนี้ในวงแล้ว');
+  const pid = newId(), used = new Set(Object.values(S.players).map(p => p.e));
+  const e = EMO.find(x => !used.has(x)) || EMO[Math.floor(Math.random() * EMO.length)];
+  const rec = { name, bal, issued:bal, e, at:TS() }; if (mine) rec.dev = DEV;
+  await withTimeout(R('players/' + pid).set(rec));
+  R('log').push({ t:TS(), k:'new', to:pid, tn:name, te:e, a:bal });
+  return pid;
+}
+async function pickCreate(){
+  try {
+    const pid = await createPlayer($('#pName').value, Math.max(0, S.meta.start || 0), true);
+    $('#pName').value = ''; S.me = pid; LS.set('pc.me.' + S.room, pid); S.lastBal = null; route(); toast('เข้าวงแล้ว 🎉');
+  } catch (e){ toast(errMsg(e), 'err'); }
+}
+
+/* ---------- scanner ---------- */
+async function openScanner(mode){
+  _closeSheet(); pushHist();
+  const tok = { stop:false, last:'' }; S.scan = tok; S.scanMode = mode;
+  $('#scanTitle').textContent = mode === 'pay' ? 'สแกน QR ของคนที่จะจ่ายให้' : 'สแกน QR เชิญเข้าวง';
+  $('#scanAlt').hidden = mode !== 'pay';
+  $('#scanMsg').textContent = 'กำลังเปิดกล้อง…'; $('#scan').hidden = false;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ $('#scanMsg').textContent = 'เปิดกล้องไม่ได้ (ต้องเปิดเว็บผ่าน https)'; return; }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false }); }
+  catch (e){ if (!tok.stop) $('#scanMsg').textContent = 'เปิดกล้องไม่ได้ — กดอนุญาตกล้องให้เว็บนี้ (ไอคอนกุญแจข้างลิงก์) แล้วลองใหม่'; return; }
+  if (tok.stop){ stream.getTracks().forEach(t => t.stop()); return; }
+  tok.stream = stream;
+  const v = $('#scanVideo'); v.srcObject = stream; try { await v.play(); } catch {}
+  let det = null;
+  if ('BarcodeDetector' in window){ try { const f = await BarcodeDetector.getSupportedFormats(); if (f.includes('qr_code')) det = new BarcodeDetector({ formats:['qr_code'] }); } catch {} }
+  if (!det){ try { await loadScript(JSQR_URL); } catch { $('#scanMsg').textContent = 'โหลดตัวอ่าน QR ไม่ได้ — เช็กอินเทอร์เน็ต'; return; } }
+  if (tok.stop) return;
+  $('#scanMsg').textContent = 'ส่องให้ QR อยู่ในกรอบ';
+  const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently:true });
+  const tick = async () => {
+    if (tok.stop) return;
+    let txt = null;
+    try {
+      if (v.readyState >= 2 && v.videoWidth){
+        if (det){ const r = await det.detect(v); if (r.length) txt = r[0].rawValue; }
+        else {
+          const sc = Math.min(1, 800 / Math.max(v.videoWidth, v.videoHeight));
+          cv.width = Math.round(v.videoWidth * sc); cv.height = Math.round(v.videoHeight * sc);
+          cx.drawImage(v, 0, 0, cv.width, cv.height);
+          const im = cx.getImageData(0, 0, cv.width, cv.height);
+          const r = window.jsQR(im.data, cv.width, cv.height, { inversionAttempts:'dontInvert' }); if (r && r.data) txt = r.data;
+        }
+      }
+    } catch {}
+    if (tok.stop) return;
+    if (txt && txt !== tok.last){ tok.last = txt; if (onScan(txt)) return; }
+    setTimeout(tick, 110);
+  };
+  tick();
+}
+function closeScanner(){
+  const t = S.scan; if (!t) return; t.stop = true;
+  try { t.stream && t.stream.getTracks().forEach(x => x.stop()); } catch {}
+  S.scan = null; $('#scanVideo').srcObject = null; $('#scan').hidden = true;
+}
+function onScan(txt){
+  const L = parseLink(txt);
+  if (!L){ toast('QR นี้ไม่ใช่ของแอปชิปวงไพ่', 'warn'); return false; }
+  buzz(35);
+  if (L.type === 'p'){
+    if (S.scanMode !== 'pay' || !S.room){ toast('นี่คือ QR รับชิป — เข้าวงก่อนแล้วกด “สแกนจ่าย”', 'warn', 3500); return false; }
+    const why = payLinkProblem(L); if (why){ toast(why, 'err'); return false; }
+    closeScanner(); openPay(L.pid, L.amt); return true;
+  }
+  closeScanner(); S.hist && (S.hist = false, history.back()); joinFromLink(L); return true;
+}
+function payLinkProblem(L){
+  if (L.room !== S.room) return `QR นี้เป็นของวงอื่น (${L.room})`;
+  if (L.pid === S.me) return 'นี่คือ QR ของคุณเอง 😄';
+  if (!S.players[L.pid]) return 'ไม่พบผู้เล่นนี้ในวงแล้ว';
+  return '';
+}
+function handlePayLink(L){ const why = payLinkProblem(L); if (why) return toast(why, 'err', 3500); openPay(L.pid, L.amt); }
+async function joinFromLink(L){
+  const db = DB_URL || L.db || S.dbUrl;
+  if (!db) return toast('QR เชิญนี้ไม่มีข้อมูลฐานข้อมูล', 'err');
+  if (S.db && db !== S.dbUrl){ await resetDB(); }
+  if (!S.db){ if (!initDB(db)) return; LS.set('pc.db', db); }
+  enterRoom(L.room);
+}
+function scanList(){
+  closeScanner();
+  const ps = sorted().filter(p => p.id !== S.me);
+  openSheet('list', `<div class="sh-head"><h3>จ่ายให้ใคร?</h3><button class="x" data-act="dismiss">✕</button></div>
+    <div class="list plist">${ps.length ? ps.map(p => prowHtml(p, null, 'payTo')).join('') : '<div class="empty" style="color:var(--ink-2)">ยังไม่มีผู้เล่นคนอื่น</div>'}</div>`);
+}
+
+/* ---------- pay ---------- */
+function openPay(pid, req){
+  const to = S.players[pid]; if (!to) return toast('ไม่พบผู้เล่นนี้', 'err');
+  S.pay = { to:pid, amt:req || 0, req:req || 0, busy:false };
+  openSheet('pay', `<div class="sh-head"><h3>จ่ายชิป</h3><button class="x" data-act="dismiss">✕</button></div>
+    <div class="payto"><span class="ava big">${esc(to.e || '🙂')}</span><div><small>จ่ายให้</small><b>${esc(to.name)}</b></div></div>
+    ${req ? `<div class="req">${esc(to.name)} เรียกเก็บ ${fmt(req)} ชิป</div>` : ''}
+    <div class="amtbig num" id="payAmt">0</div>
+    <div class="after" id="payAfter"></div>
+    <div class="chips">${[5, 10, 20, 50, 100].map(v => `<button class="chip c${v}" data-act="payAdd" data-v="${v}"><span>${v}</span></button>`).join('')}</div>
+    <div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<button data-act="payKey" data-k="${k}">${k}</button>`).join('')}<button class="fn" data-act="payKey" data-k="C">ล้าง</button><button data-act="payKey" data-k="0">0</button><button class="fn" data-act="payKey" data-k="B">⌫</button></div>
+    <button class="btn gold block" style="height:58px;font-size:18px" id="payGo" data-act="payGo">จ่าย</button>`);
+  updPay();
+}
+function updPay(){
+  if (S.sheet !== 'pay') return;
+  const me = S.players[S.me], to = S.players[S.pay.to]; if (!me || !to) return dismiss();
+  const a = S.pay.amt, after = (me.bal || 0) - a, low = !S.meta.neg && after < 0;
+  const ae = $('#payAmt'); ae.textContent = fmt(a); ae.classList.toggle('zero', !a);
+  const af = $('#payAfter'); af.classList.toggle('bad', low);
+  af.textContent = !a ? `คุณมี ${fmt(me.bal)} ชิป` : low ? `ชิปไม่พอ (มี ${fmt(me.bal)})` : `เหลือหลังจ่าย ${after < 0 ? '−' : ''}${fmt(Math.abs(after))} ชิป`;
+  const b = $('#payGo');
+  b.disabled = !a || low || S.pay.busy || !S.connected;
+  b.textContent = S.pay.busy ? 'กำลังจ่าย…' : !S.connected ? 'ออฟไลน์อยู่' : a ? `จ่าย ${fmt(a)} ให้ ${to.name}` : 'ใส่จำนวนชิป';
+}
+function payKey(k){
+  if (S.pay.busy) return; let a = S.pay.amt;
+  if (k === 'C') a = 0; else if (k === 'B') a = Math.floor(a / 10); else a = Math.min(9999999, a * 10 + Number(k));
+  S.pay.amt = a; updPay();
+}
+async function payGo(){
+  const { to, amt } = S.pay; if (!amt || S.pay.busy) return;
+  const toName = (S.players[to] || {}).name, toE = (S.players[to] || {}).e;
+  S.pay.busy = true; updPay();
+  const slow = setTimeout(() => { const b = $('#payGo'); if (b && S.pay.busy) b.textContent = 'เน็ตช้า กำลังรอ…'; }, 6000);
+  try {
+    await doPay(to, amt);
+    dismiss(); flash(toE || '✅', '−' + fmt(amt), `จ่ายให้ ${toName} แล้ว`, 'out'); ding(false); buzz(40);
+  } catch (e){ toast(errMsg(e), 'err', 4000); S.pay.busy = false; updPay(); }
+  finally { clearTimeout(slow); }
+}
+async function doPay(to, amt){
+  const from = S.me; let ok = false, why = '', names = {};
+  const res = await R('players').transaction(cur => {
+    ok = false; why = '';
+    if (!cur) return cur;
+    const a = cur[from], b = cur[to];
+    if (!a){ why = 'คุณไม่อยู่ในวงแล้ว'; return; }
+    if (!b){ why = 'ไม่พบผู้รับในวง'; return; }
+    if (from === to){ why = 'จ่ายให้ตัวเองไม่ได้'; return; }
+    if (!(S.meta && S.meta.neg) && (a.bal || 0) < amt){ why = `ชิปไม่พอ (มี ${fmt(a.bal)})`; return; }
+    a.bal = (a.bal || 0) - amt; b.bal = (b.bal || 0) + amt;
+    names = { fn:a.name, fe:a.e || '', tn:b.name, te:b.e || '' }; ok = true; return cur;
+  });
+  if (!res.committed || !ok) throw new Error(why || 'จ่ายไม่สำเร็จ ลองใหม่');
+  R('log').push(Object.assign({ t:TS(), k:'pay', f:from, to, a:amt }, names));
+}
+
+/* ---------- receive / invite ---------- */
+function openReceive(){
+  S.req = 0;
+  const me = S.players[S.me];
+  openSheet('recv', `<div class="sh-head"><h3>QR รับชิป</h3><button class="x" data-act="dismiss">✕</button></div>
+    <div class="qrbox" id="qrBox"></div>
+    <div class="qrname">${esc(me.e || '')} ${esc(me.name)}<span id="qrReq"></span></div>
+    <div class="qrsub">ให้เพื่อนกด “สแกนจ่าย” แล้วส่องที่ QR นี้</div>
+    <div class="muted" style="text-align:center;margin-bottom:8px">เรียกเก็บจำนวน (ไม่บังคับ)</div>
+    <div class="seg" id="reqSeg">${[0, 10, 20, 50, 100].map(v => `<button data-act="reqSet" data-v="${v}" class="${v ? '' : 'on'}">${v ? fmt(v) : 'ไม่ระบุ'}</button>`).join('')}<button data-act="reqOther" data-v="-1">อื่นๆ</button></div>`);
+  drawRecv(); wakeOn();
+}
+function drawRecv(){
+  if (S.sheet !== 'recv') return;
+  $('#qrBox').innerHTML = qrSvg(payLink(S.me, S.req));
+  $('#qrReq').innerHTML = S.req ? `<span class="qrreq">${fmt(S.req)}</span>` : '';
+  document.querySelectorAll('#reqSeg button').forEach(b => b.classList.toggle('on', +b.dataset.v === S.req || (b.dataset.v === '-1' && S.req && ![10, 20, 50, 100].includes(S.req))));
+}
+function openInvite(){
+  const link = joinLink();
+  openSheet('inv', `<div class="sh-head"><h3>เชิญเพื่อนเข้าวง</h3><button class="x" data-act="dismiss">✕</button></div>
+    <div class="qrbox">${qrSvg(link)}</div>
+    <div class="big-code">${esc(S.room)}</div>
+    <div class="qrsub">ให้เพื่อนสแกนด้วยกล้องมือถือ หรือเปิดแอปแล้วใส่รหัสวงนี้</div>
+    <div class="grid2"><button class="btn inkghost" data-act="copyLink">📋 คัดลอกลิงก์</button><button class="btn gold" data-act="shareLink">📤 แชร์</button></div>`);
+  wakeOn();
+}
+
+/* ---------- menu ---------- */
+function openMenu(){
+  const me = S.players[S.me];
+  openSheet('menu', `<div class="sh-head"><h3>${esc(S.meta.name)}</h3><button class="x" data-act="dismiss">✕</button></div>
+    <div class="menu">
+      <button data-act="invite"><span class="ic">👥</span><span>เชิญเพื่อนเข้าวง<small>QR / ลิงก์ / รหัส ${esc(S.room)}</small></span></button>
+      ${S.admin ? `<button data-act="adminLock"><span class="ic">🔒</span><span>ออกจากโหมดเจ้ามือ</span></button>`
+                : `<button data-act="adminUnlock"><span class="ic">👑</span><span>โหมดเจ้ามือ<small>เพิ่มชื่อ · เติม/หักชิป · ยกเลิกรายการ (ใช้ PIN)</small></span></button>`}
+      <button data-act="renameMe"><span class="ic">✏️</span><span>เปลี่ยนชื่อของฉัน<small>ตอนนี้: ${esc(me.name)}</small></span></button>
+      <button data-act="switchMe"><span class="ic">🔁</span><span>สลับเป็นผู้เล่นคนอื่นบนเครื่องนี้</span></button>
+      <button data-act="leaveRoom"><span class="ic">🚪</span><span>ออกจากวงนี้<small>ชิปยังอยู่ กลับเข้ามาใหม่ได้</small></span></button>
+    </div>`);
+}
+function adminUnlock(){
+  openSheet('pin', `<div class="sh-head"><h3>👑 โหมดเจ้ามือ</h3><button class="x" data-act="dismiss">✕</button></div>
+    <label class="field"><span>PIN เจ้ามือ</span><input class="inp num" id="pinIn" type="password" inputmode="numeric" maxlength="6" placeholder="••••" style="font-size:24px;letter-spacing:.3em;text-align:center"></label>
+    <button class="btn gold block" data-act="pinGo">ปลดล็อก</button>`);
+  setTimeout(() => { const i = $('#pinIn'); if (i){ i.focus(); i.addEventListener('keydown', e => { if (e.key === 'Enter') pinGo(); }); } }, 300);
+}
+function pinGo(){
+  const v = String(($('#pinIn') || {}).value || '').trim();
+  if (hashPin(S.room, v) !== S.meta.pin){ buzz([30, 40, 30]); return toast('PIN ไม่ถูกต้อง', 'err'); }
+  LS.set('pc.adm.' + S.room, S.meta.pin); S.admin = true; dismiss(); route(); renderLog(); toast('เข้าโหมดเจ้ามือแล้ว 👑');
+}
+function adminLock(){ LS.del('pc.adm.' + S.room); S.admin = false; dismiss(); route(); renderLog(); toast('ล็อกโหมดเจ้ามือแล้ว'); }
+async function renameMe(){
+  const me = S.players[S.me]; const n = cleanName(prompt('ชื่อใหม่ของคุณ', me.name) || '');
+  if (!n || n === me.name) return;
+  await renamePlayer(S.me, n); dismiss();
+}
+async function renamePlayer(pid, n){
+  const p = S.players[pid]; if (!p) return;
+  if (Object.entries(S.players).some(([id, x]) => id !== pid && String(x.name).toLowerCase() === n.toLowerCase())) return toast('มีชื่อนี้ในวงแล้ว', 'err');
+  try { await withTimeout(R(`players/${pid}/name`).set(n)); R('log').push({ t:TS(), k:'ren', to:pid, fn:p.name, tn:n }); toast('เปลี่ยนชื่อแล้ว'); }
+  catch (e){ toast(errMsg(e), 'err'); }
+}
+function switchMe(){ LS.del('pc.me.' + S.room); S.me = null; S.lastBal = null; dismiss(); route(); }
+
+/* ---------- admin: player ---------- */
+function openAdm(pid){
+  const p = S.players[pid]; if (!p) return;
+  S.adm = { pid, d:0, busy:false };
+  openSheet('adm', `<div class="sh-head"><h3>👑 จัดการผู้เล่น</h3><button class="x" data-act="dismiss">✕</button></div>
+    <div class="payto"><span class="ava big">${esc(p.e || '🙂')}</span><div class="grow" style="flex:1"><small>มีอยู่</small><b class="num" id="admBal"></b></div><button class="btn sm inkghost" data-act="admPay">จ่ายให้</button></div>
+    <div class="delta num" id="admD">0</div>
+    <div class="after" id="admAfter"></div>
+    <div class="chips">${[10, 50, 100].map(v => `<button class="chip minus" data-act="admD" data-v="${-v}"><span>−${v}</span></button>`).join('')}${[10, 50].map(v => `<button class="chip c${v === 10 ? 10 : 20}" data-act="admD" data-v="${v}"><span>+${v}</span></button>`).join('')}</div>
+    <div class="row" style="margin-bottom:var(--s2)"><input class="inp num grow" id="admNum" type="number" inputmode="numeric" min="0" placeholder="จำนวนอื่นๆ"><button class="btn sm inkghost" style="height:50px" data-act="admNumSub">หัก</button><button class="btn sm gold" style="height:50px" data-act="admNumAdd">เติม</button></div>
+    <div class="grid2"><button class="btn inkghost" data-act="admClear">ล้าง</button><button class="btn gold" id="admGo" data-act="admGo">ยืนยัน</button></div>
+    <div class="hr"></div>
+    <label class="field"><span>ชื่อ</span><div class="row"><input class="inp grow" id="admName" maxlength="20" value="${esc(p.name)}"><button class="btn sm inkghost" style="height:50px" data-act="admRename">บันทึก</button></div></label>
+    <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <button class="btn sm inkghost" data-act="admFree">📱 ปลดเครื่องที่ผูกชื่อนี้</button>
+      <button class="btn sm danger" data-act="admDel">🗑️ ลบผู้เล่น</button>
+    </div>`);
+  updAdm();
+}
+function updAdm(){
+  if (S.sheet !== 'adm') return;
+  const p = S.players[S.adm.pid]; if (!p){ toast('ผู้เล่นนี้ถูกลบแล้ว', 'warn'); return dismiss(); }
+  const d = S.adm.d, nb = (p.bal || 0) + d, bad = nb < 0 && !S.meta.neg;
+  $('#admBal').textContent = `${p.name} · ${fmt(p.bal)} ชิป`;
+  const de = $('#admD'); de.textContent = d ? sgn(d) : '0'; de.className = 'delta num ' + (d > 0 ? 'up' : d < 0 ? 'down' : 'zero');
+  const af = $('#admAfter'); af.classList.toggle('bad', bad);
+  af.textContent = d ? (bad ? `หักเกินยอดที่มี (${fmt(p.bal)})` : `หลังปรับ: ${nb < 0 ? '−' : ''}${fmt(Math.abs(nb))} ชิป`) : 'กดชิปเพื่อเติม/หัก แล้วกดยืนยัน';
+  const b = $('#admGo'); b.disabled = !d || bad || S.adm.busy;
+  b.textContent = S.adm.busy ? 'กำลังบันทึก…' : d > 0 ? `เติม ${fmt(d)}` : d < 0 ? `หัก ${fmt(-d)}` : 'ยืนยัน';
+}
+async function admGo(){
+  const { pid, d } = S.adm; if (!d || S.adm.busy) return;
+  S.adm.busy = true; updAdm();
+  try { await doAdj(pid, d); S.adm.d = 0; toast(`${d > 0 ? 'เติม' : 'หัก'} ${fmt(Math.abs(d))} ให้ ${(S.players[pid] || {}).name} แล้ว`); }
+  catch (e){ toast(errMsg(e), 'err'); }
+  S.adm.busy = false; updAdm();
+}
+async function doAdj(pid, d){
+  let ok = false, why = '', nm = '', em = '';
+  const res = await withTimeout(R('players/' + pid).transaction(p => {
+    ok = false; why = '';
+    if (!p) return p;
+    const nb = (p.bal || 0) + d;
+    if (nb < 0 && !(S.meta && S.meta.neg)){ why = `หักเกินยอดที่มี (${fmt(p.bal)})`; return; }
+    p.bal = nb; p.issued = (p.issued || 0) + d; nm = p.name; em = p.e || ''; ok = true; return p;
+  }), 20000);
+  if (!res.committed || !ok) throw new Error(why || 'ไม่พบผู้เล่น');
+  R('log').push({ t:TS(), k:'adj', to:pid, tn:nm, te:em, a:d });
+}
+async function admDel(){
+  const p = S.players[S.adm.pid]; if (!p) return;
+  if (!confirm(`ลบ "${p.name}" ออกจากวง?\nชิปที่มีอยู่ ${fmt(p.bal)} จะหายไปด้วย`)) return;
+  try { await withTimeout(R('players/' + S.adm.pid).remove()); R('log').push({ t:TS(), k:'del', tn:p.name, te:p.e || '', a:p.bal || 0 }); dismiss(); toast(`ลบ ${p.name} แล้ว`); }
+  catch (e){ toast(errMsg(e), 'err'); }
+}
+function openAddPlayer(){
+  openSheet('add', `<div class="sh-head"><h3>➕ เพิ่มผู้เล่น</h3><button class="x" data-act="dismiss">✕</button></div>
+    <label class="field"><span>ชื่อ</span><input class="inp" id="apName" maxlength="20" placeholder="ชื่อผู้เล่น"></label>
+    <label class="field"><span>ชิปเริ่มต้น</span><input class="inp num" id="apBal" type="number" inputmode="numeric" min="0" value="${S.meta.start || 0}"></label>
+    <button class="btn gold block" data-act="apGo">เพิ่ม</button>
+    <p class="muted" style="margin:12px 0 0">เพื่อนเปิดลิงก์เชิญแล้วแตะเลือกชื่อนี้ได้เลย</p>`);
+  setTimeout(() => $('#apName') && $('#apName').focus(), 300);
+}
+async function apGo(){
+  try { const n = $('#apName').value; await createPlayer(n, Math.max(0, parseInt($('#apBal').value) || 0), false); toast(`เพิ่ม ${cleanName(n)} แล้ว`); $('#apName').value = ''; $('#apName').focus(); }
+  catch (e){ toast(errMsg(e), 'err'); }
+}
+function openSettings(){
+  const m = S.meta;
+  openSheet('set', `<div class="sh-head"><h3>⚙️ ตั้งค่าวง</h3><button class="x" data-act="dismiss">✕</button></div>
+    <label class="field"><span>ชื่อวง</span><input class="inp" id="sName" maxlength="30" value="${esc(m.name)}"></label>
+    <label class="field"><span>ทุนเริ่มต้นสำหรับคนใหม่ / ตอนรีเซ็ต</span><input class="inp num" id="sStart" type="number" inputmode="numeric" min="0" value="${m.start || 0}"></label>
+    <label class="toggle"><span>อนุญาตให้ติดลบ<small>ชิปหมดแล้วยังจ่ายต่อได้</small></span><input type="checkbox" id="sNeg" ${m.neg ? 'checked' : ''}></label>
+    <label class="toggle"><span>ให้ผู้เล่นสร้างชื่อเองได้<small>ปิดไว้ = เจ้ามือเพิ่มชื่อให้เท่านั้น</small></span><input type="checkbox" id="sSelf" ${m.self !== false ? 'checked' : ''}></label>
+    <label class="field"><span>เปลี่ยน PIN เจ้ามือ (เว้นว่าง = ไม่เปลี่ยน)</span><input class="inp num" id="sPin" type="password" inputmode="numeric" maxlength="6" placeholder="PIN ใหม่ 4-6 หลัก"></label>
+    <button class="btn gold block" data-act="setGo">บันทึก</button>
+    <div class="hr"></div>
+    <button class="btn danger block" data-act="closeRoom">ปิดวง (ลบข้อมูลทั้งหมด)</button>`);
+}
+async function setGo(){
+  const up = { name:String($('#sName').value).trim().slice(0, 30) || S.meta.name, start:Math.max(0, parseInt($('#sStart').value) || 0), neg:$('#sNeg').checked, self:$('#sSelf').checked };
+  const pin = String($('#sPin').value).trim();
+  if (pin){ if (!/^\d{4,6}$/.test(pin)) return toast('PIN ต้องเป็นตัวเลข 4-6 หลัก', 'warn'); up.pin = hashPin(S.room, pin); }
+  try { if (up.pin) LS.set('pc.adm.' + S.room, up.pin); await withTimeout(R('meta').update(up)); rememberRoom(S.room, up.name); dismiss(); toast('บันทึกแล้ว'); }
+  catch (e){ toast(errMsg(e), 'err'); }
+}
+async function resetAll(){
+  const st = S.meta.start || 0;
+  if (!confirm(`รีเซ็ตชิปทุกคนเป็น ${fmt(st)} ชิป?`)) return;
+  const clear = confirm('ล้างประวัติการจ่ายทั้งหมดด้วยไหม?\n(ตกลง = ล้าง, ยกเลิก = เก็บไว้)');
+  try {
+    await withTimeout(R('players').transaction(cur => { if (!cur) return cur; for (const k in cur){ cur[k].bal = st; cur[k].issued = st; } return cur; }), 20000);
+    if (clear) await withTimeout(R('log').remove());
+    R('log').push({ t:TS(), k:'reset', a:st }); toast('รีเซ็ตแล้ว');
+  } catch (e){ toast(errMsg(e), 'err'); }
+}
+async function closeRoom(){
+  if (!confirm(`ปิดวง "${S.meta.name}" และลบข้อมูลทั้งหมด?\nทุกคนจะถูกออกจากวง`)) return;
+  if (prompt('พิมพ์รหัสวงเพื่อยืนยัน: ' + S.room) !== S.room) return toast('ยกเลิกการปิดวง', 'warn');
+  const c = S.room;
+  try { unsubscribe(); await withTimeout(S.db.ref(`${ROOT}/${c}`).remove()); forgetRoom(c); LS.del('pc.me.' + c); LS.del('pc.adm.' + c); dismiss(); showLobby(); toast('ปิดวงแล้ว'); }
+  catch (e){ toast(errMsg(e), 'err'); subscribe(); }
+}
+async function logRev(k){
+  const e = S.log.find(x => x.k === k); if (!e || e.k !== 'pay' || e.x) return;
+  if (!confirm(`ยกเลิกรายการนี้?\n${e.fn} → ${e.tn} ${fmt(e.a)} ชิป\n(คืนชิปให้ ${e.fn})`)) return;
+  try {
+    let ok = false, why = '';
+    const res = await withTimeout(R('players').transaction(cur => {
+      ok = false; why = ''; if (!cur) return cur;
+      const a = cur[e.to], b = cur[e.f]; if (!a || !b){ why = 'มีผู้เล่นในรายการนี้ถูกลบไปแล้ว'; return; }
+      a.bal = (a.bal || 0) - e.a; b.bal = (b.bal || 0) + e.a; ok = true; return cur;
+    }), 20000);
+    if (!res.committed || !ok) throw new Error(why || 'ยกเลิกไม่สำเร็จ');
+    await R('log/' + k + '/x').set(true);
+    R('log').push({ t:TS(), k:'rev', f:e.f, fn:e.fn, fe:e.fe || '', to:e.to, tn:e.tn, te:e.te || '', a:e.a });
+    toast('ยกเลิกรายการแล้ว');
+  } catch (err){ toast(errMsg(err), 'err'); }
+}
+
+/* ---------- actions ---------- */
+const ACT = {
+  dismiss, setupConnect, createRoom, leaveRoom, pickCreate, scanList, payGo, adminUnlock, adminLock, pinGo, renameMe, switchMe,
+  admGo, admDel, apGo, setGo, resetAll, closeRoom,
+  scanJoin: () => openScanner('join'),
+  scanPay: () => openScanner('pay'),
+  changeDb: async () => { if (!confirm('เปลี่ยนฐานข้อมูล Firebase? (ต้องวาง Database URL ใหม่)')) return; await resetDB(); LS.del('pc.db'); LS.del('pc.room'); $('#setupUrl').value = ''; show('setup'); },
+  joinCode: () => { const c = $('#joinCode').value.trim().toUpperCase(); if (!c) return toast('ใส่รหัสวงก่อน', 'warn'); enterRoom(c); },
+  recent: el => enterRoom(el.dataset.code),
+  claim: el => claim(el.dataset.id),
+  receive: openReceive, invite: openInvite, menu: openMenu,
+  addPlayer: openAddPlayer, settings: openSettings,
+  tab: el => setTab(el.dataset.t),
+  player: el => { const id = el.dataset.id; if (S.admin) return openAdm(id); if (id === S.me) return openReceive(); openPay(id, 0); },
+  payTo: el => openPay(el.dataset.id, 0),
+  payAdd: el => { if (S.pay.busy) return; S.pay.amt = Math.min(9999999, S.pay.amt + +el.dataset.v); updPay(); buzz(10); },
+  payKey: el => payKey(el.dataset.k),
+  reqSet: el => { S.req = +el.dataset.v; drawRecv(); },
+  reqOther: () => { const v = parseInt(prompt('เรียกเก็บกี่ชิป?', S.req || '') || ''); if (v > 0){ S.req = v; drawRecv(); } },
+  copyLink: async () => { try { await navigator.clipboard.writeText(joinLink()); toast('คัดลอกลิงก์แล้ว'); } catch { prompt('คัดลอกลิงก์นี้', joinLink()); } },
+  shareLink: async () => { const url = joinLink(); if (navigator.share){ try { await navigator.share({ title:'ชิปวงไพ่', text:`มาเข้าวง "${S.meta.name}" (รหัส ${S.room})`, url }); } catch {} } else ACT.copyLink(); },
+  admD: el => { S.adm.d += +el.dataset.v; updAdm(); buzz(10); },
+  admClear: () => { S.adm.d = 0; updAdm(); },
+  admNumAdd: () => { const v = parseInt($('#admNum').value) || 0; if (v > 0){ S.adm.d += v; $('#admNum').value = ''; updAdm(); } },
+  admNumSub: () => { const v = parseInt($('#admNum').value) || 0; if (v > 0){ S.adm.d -= v; $('#admNum').value = ''; updAdm(); } },
+  admRename: async () => { const n = cleanName($('#admName').value); if (n && n !== (S.players[S.adm.pid] || {}).name) await renamePlayer(S.adm.pid, n); },
+  admFree: async () => { try { await withTimeout(R(`players/${S.adm.pid}/dev`).remove()); toast('ปลดแล้ว — เลือกชื่อนี้จากเครื่องใหม่ได้'); } catch (e){ toast(errMsg(e), 'err'); } },
+  admPay: () => { const id = S.adm.pid; if (id === S.me) return toast('นี่คือชื่อของคุณเอง', 'warn'); openPay(id, 0); },
+  logRev: el => logRev(el.dataset.k),
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const fn = ACT[el.dataset.act]; if (fn){ e.preventDefault(); fn(el, e); }
+});
+$('#joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') ACT.joinCode(); });
+$('#pName').addEventListener('keydown', e => { if (e.key === 'Enter') pickCreate(); });
+window.addEventListener('hashchange', () => {
+  const h = parseLink(location.hash); if (!h) return; history.replaceState(null, '', BASE);
+  if (h.type === 'j') return joinFromLink(h);
+  if (h.type === 'p' && S.room && S.me) handlePayLink(h);
+});
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (S.sheet === 'recv' || S.sheet === 'inv')) wakeOn(); });
+
+boot();
+</script>
+</body>
+</html>
